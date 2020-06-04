@@ -1,0 +1,629 @@
+* Packages
+Emacs has a built-in program for loading installed packages that is usually automatically initialized (via =package-initialize=).
+We use it in order to load another program named =use-package=, which we will use to load and configure all other packages.
+
+#+BEGIN_SRC emacs-lisp
+(require 'package)
+(setq package-enable-at-startup nil)
+#+END_SRC
+
+The =package= module of Emacs is responsible for downloading and installing external packages on Emacs. Below, we add extra repositories that contain Emacs packages and frequently used.
+#+BEGIN_SRC emacs-lisp
+(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                         ("melpa" . "https://melpa.org/packages/")
+                         ("org" . "https://orgmode.org/elpa/")))
+#+END_SRC
+
+Next, we check if [[https://github.com/jwiegley/use-package][=use-package=]] is installed, otherwise we install it. Then, we load it up.
+#+BEGIN_SRC emacs-lisp
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+(eval-when-compile
+  (require 'use-package))
+#+END_SRC
+
+* User Information
+Emacs has a couple of variables that can store the user's information (like name and email). These variables are automatically used when exporting files.
+#+BEGIN_SRC emacs-lisp
+(setq user-full-name "Guilherme Salomé"
+      user-mail-address "guilhermesalome@gmail.com")
+#+END_SRC
+* Path
+Use the package [[https://github.com/purcell/exec-path-from-shell][=exec-path-from-shell=]], which ensures that the PATH environment variable inside Emacs is the same as what is available in the terminal. This helps Emacs find other programs that are not directly related to Emacs, like Latex.
+#+BEGIN_SRC emacs-lisp
+(use-package exec-path-from-shell
+  :if (memq window-system '(mac ns))
+  :ensure t
+  :config (exec-path-from-shell-initialize))
+#+END_SRC
+
+* Mac Keybindings
+Change the use of Alt within Emacs to be the same as meta (=M=).
+#+BEGIN_SRC emacs-lisp
+(setq mac-command-modifier 'meta
+      mac-option-modifier 'meta)
+(setq x-alt-keysym 'meta)
+#+END_SRC
+
+* Navigation
+To switch between windows in Emacs, one can use =C-x o= (command =other-window=) or =C-- C-x o=.
+However, when there are multiple windows open, one would need to execute =other-window= multiple times.
+The package =ace-window= gives each window a number (when there are more than two), so that to switch to a different window we only need to type the window number.
+Use =M-o= to switch windows using =ace-window=:
+#+BEGIN_SRC emacs-lisp
+(define-key global-map "\M-o" 'ace-window)
+#+END_SRC
+* Basic Styling
+I like using Emacs fullscreen, but on Mac fullscreen usually means a separate Desktop environment. The configuration below creates a borderless-fullscreen environment, where the Emacs window occupies the entire monitor, but does not create a separate Desktop environment. This is useful when changing between Emacs and different applications (Alt-TAB), otherwise Mac will play an animation when changing Desktops and it is a little slow.
+#+BEGIN_SRC emacs-lisp
+(set-frame-parameter nil 'fullscreen 'fullboth)
+#+END_SRC
+Notice that the borderless-fullscreen only works with some versions of Emacs (I am not sure why). I often use the version available on [[https://github.com/railwaycat/homebrew-emacsmacport][this repository]] (there's a download page for compiled versions).
+
+Remove the toolbar, scroll bar and the menu bar to leave more space for actual content:
+#+BEGIN_SRC emacs-lisp
+(progn (tool-bar-mode -1)
+       (scroll-bar-mode -1)
+       (menu-bar-mode -1))
+#+END_SRC
+
+Highlight current line:
+#+BEGIN_SRC emacs-lisp
+(global-hl-line-mode)
+#+END_SRC
+
+Non-blinking cursor:
+#+BEGIN_SRC emacs-lisp
+(blink-cursor-mode 0)
+#+END_SRC
+
+When a line is too long, will Emacs will automatically break it into multiple lines, and an arrow icon will be displayed. To turn off the arrow, use:
+#+BEGIN_SRC emacs-lisp
+(add-hook 'text-mode-hook 'turn-on-visual-line-mode)
+(visual-line-mode 1)
+#+END_SRC
+
+ Highlight corresponding parentheses when cursor is on one:
+#+BEGIN_SRC emacs-lisp
+(progn (setq show-paren-delay 0)
+       (show-paren-mode t))
+#+END_SRC
+
+Display current time in active buffer:
+#+BEGIN_SRC emacs-lisp
+(display-time-mode 1)
+#+END_SRC
+
+# (setq indent-tabs-mode t
+#                 tab-stop-list (number-sequence 4 200 4)
+#                 tab-width 4
+#                 indent-line-function 'insert-tab)
+
+* Theme
+The [[https://github.com/domtronn/all-the-icons.el][all-the-icons]] package makes nice icons available to Emacs and other packages. Our theme below uses these icons.
+#+BEGIN_SRC emacs-lisp
+(use-package all-the-icons
+  :ensure t)
+#+END_SRC
+When running for the first time, execute the function =all-the-icons-install-fonts= (with =M-x=).
+
+The package [[https://github.com/hlissner/emacs-doom-themes#install][Doom themes]] provides several color themes.
+#+BEGIN_SRC emacs-lisp
+(use-package doom-themes
+  :ensure t
+  :config
+  (setq doom-themes-enable-bold t ;enable bold
+        doom-themes-enable-italic t) ;enable italics
+  (doom-themes-neotree-config)	    ;neotree icons
+  (doom-themes-visual-bell-config)   ;flashing mode-line on errors
+  (doom-themes-org-config)	    ;improves org fonts
+  (load-theme 'doom-molokai t)
+  ;; (load-theme 'doom-solarized-light t)
+  ;; (load-theme 'doom-dracula t)
+  )
+#+END_SRC
+Several other styles are available: doom-one, doom-one-light, doom-vibrant, doom-city-lights, doom-dracula, doom-molokai, doom-nord, doom-nord-light, doom-opera, doom-nova, doom-peacock, doom-solarized-light, doom-spacegrey, doom-tomorrow-night, doom-tomorrow-day, doom-mono-dark, doom-tron.
+
+The Doom themes package can also style the modeline:
+#+BEGIN_SRC emacs-lisp
+(use-package doom-modeline
+  :ensure t
+  :defer 0.1
+  :config (doom-modeline-mode))
+#+END_SRC
+
+* Clean Up Before Saving a File
+Emacs can remove unecessary whitespaces from files during save.
+However, when doing so, Emacs will substitute whitespaces for tabs. When coding in Python, we want to preserve spaces as spaces and not tabs. Therefore, we need to modify =indent-tabs-mode= so that spaces are not substituted by tabs during clean up.
+#+BEGIN_SRC emacs-lisp
+(setq-default indent-tabs-mode nil)
+(progn (add-hook 'before-save-hook 'whitespace-cleanup)
+       (add-hook 'before-save-hook (lambda() (delete-trailing-whitespace))))
+#+END_SRC
+
+* Starting Screen
+When Emacs starts up a Welcome screen is shown. Since I want to show my own buffers, we need to supress Emac's welcome screen:
+#+BEGIN_SRC emacs-lisp
+(setq inhibit-startup-message t)
+#+END_SRC
+
+* File Tree
+The package [[https://github.com/jaypei/emacs-neotree][neotree]] provides a small browsing window that can show files or the current buffer's folder.
+#+BEGIN_SRC emacs-lisp
+(use-package neotree
+  :ensure t
+  :config
+  (global-set-key [f8] 'neotree-toggle) ; F8 key toggles tree
+  (setq neo-smart-open t)) ; changes folder to where current file is
+#+END_SRC
+
+* Templating and Completion
+[[https://github.com/joaotavora/yasnippet/][YASnippet]] is a template system for Emacs. It allows you to type an abbreviation and automatically expand it into function templates. Turning on the =yas-global-mode= means expanding is always available (on any major mode).
+#+BEGIN_SRC emacs-lisp
+  (use-package yasnippet
+    :ensure t
+    :config (yas-global-mode 1))
+#+END_SRC
+
+The minor mode =electric-pair-mode= automatically creates pairs for the symbols: =(, [, { and <=. It is also useful for inserting brackets around a selected region (using =C-space= to select the window).
+#+BEGIN_SRC emacs-lisp
+(electric-pair-mode t)
+#+END_SRC
+
+Since I use the symbol =<= for templating, I disable the pairing functionality for =<=.
+#+BEGIN_SRC emacs-lisp
+(setq electric-pair-inhibit-predicate
+      `(lambda (c)
+         (if (char-equal c ?\<) t (,electric-pair-inhibit-predicate c))))
+#+END_SRC
+
+* Incremental Searching
+The package [[https://github.com/emacs-helm/helm][Helm]] provides incremental search functions for Emacs. For example, when searching for a file, Helm can display all files in the folder, and to select a file we just type some letters that correspond to the filename. Helm will then narrow down the list of displayed files until the one needed is selected.
+#+BEGIN_SRC emacs-lisp
+  (use-package helm
+    :ensure helm
+    :config
+    (require 'helm-config)
+    (global-set-key (kbd "C-c h") 'helm-command-prefix)
+    (global-set-key (kbd "C-x b") 'helm-buffers-list)
+    (global-set-key (kbd "C-x r b") 'helm-bookmarks) ;; Create a bookmark: C-x r m
+    (global-set-key (kbd "M-x") 'helm-M-x)
+    (global-set-key (kbd "M-y") 'helm-show-kill-ring)
+    (global-set-key (kbd "C-x C-f") 'helm-find-files)
+    (global-set-key (kbd "C-x b") 'helm-mini)
+    (global-set-key (kbd "C-c h g") 'helm-google-suggest)
+    (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
+    ;; The default "C-x c" is quite close to "C-x C-c", which quits Emacs.
+    ;; Changed to "C-c h". Note: We must set "C-c h" globally, because we
+    ;; cannot change `helm-command-prefix-key' once `helm-config' is loaded.
+    (global-set-key (kbd "C-c h") 'helm-command-prefix)
+    (global-unset-key (kbd "C-x c"))
+    (setq helm-buffers-fuzzy-matching t
+          helm-recentf-fuzzy-match    t)
+    (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB work in terminal
+    (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+    (when (executable-find "curl")
+      (setq helm-google-suggest-use-curl-p t))
+    (setq helm-split-window-in-side-p         t ; open helm buffer inside current window, not occupy whole other window
+        helm-move-to-line-cycle-in-source     nil ; move to end or beginning of source when reaching top or bottom of source.
+        helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
+        helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
+        helm-ff-file-name-history-use-recentf t
+        helm-echo-input-in-header-line t)
+    (helm-mode 1)
+    (require 'helm-eshell)
+    (add-hook 'eshell-mode-hook
+              #'(lambda ()
+                  (define-key eshell-mode-map (kbd "M-r")  'helm-eshell-history)))
+    )
+#+END_SRC
+You can navigate the buffer with =C-n= and =C-p=, =C-v= and =M-v= to move to next/previous pages, and =M-<= and =M->= to move to the top and bottom of the Helm buffer.
+You can mark candidates with =C-SPC=. This is useful when you need to perform an action on many candidates of your choice. Use =M-a= to select all.
+Use =C-c C-i= to insert marked candidates into buffer.
+You can filter out buffers by major mode using the pattern =*<major-mode>=. For example, =*dired= narrows to only Dired buffers. You can also filter *out* buffers that belong to a major mode by adding =!= to the pattern. For example, =*!dired= select all buffers that are not in Dired mode.
+You can also select buffers in a specific directory by using the pattern =/directory=. For example, =/.emacs.d/= narrows to buffers that are only inside .emacs.d. Add =!= before the pattern for reverse version. For example, =!/.emacs.d/= narrows to buffers not in that folder.
+
+
+The package [[https://github.com/ShingoFukuyama/helm-swoop][Helm Swoop]] can display all instances of a word on a buffer in another buffer.
+#+BEGIN_SRC emacs-lisp
+(use-package helm-swoop
+  :ensure t
+  :config
+  (global-set-key (kbd "M-i") 'helm-swoop)
+  (global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
+  (global-set-key (kbd "C-c M-i") 'helm-multi-swoop)
+  (global-set-key (kbd "C-x M-i") 'helm-multi-swoop-all)
+  ;; When doing isearch, hand the word over to helm-swoop
+  (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
+  ;; From helm-swoop to helm-multi-swoop-all
+  (define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
+  ;; Move up and down like isearch
+  (define-key helm-swoop-map (kbd "C-r") 'helm-previous-line)
+  (define-key helm-swoop-map (kbd "C-s") 'helm-next-line)
+  (define-key helm-multi-swoop-map (kbd "C-r") 'helm-previous-line)
+  (define-key helm-multi-swoop-map (kbd "C-s") 'helm-next-line)
+  ;; Save buffer when helm-multi-swoop-edit complete
+  (setq helm-multi-swoop-edit-save t)
+  ;; If this value is t, split window inside the current window
+  (setq helm-swoop-split-with-multiple-windows nil)
+  ;; Split direcion. 'split-window-vertically or 'split-window-horizontally
+  (setq helm-swoop-split-direction 'split-window-vertically)
+  ;; If nil, you can slightly boost invoke speed in exchange for text color
+  (setq helm-swoop-speed-or-color nil)
+  ;; ;; Go to the opposite side of line from the end or beginning of line
+  (setq helm-swoop-move-to-line-cycle t)
+  ;; Optional face for line numbers
+  ;; Face name is `helm-swoop-line-number-face`
+  (setq helm-swoop-use-line-number-face t)
+  ;; If you prefer fuzzy matching
+  (setq helm-swoop-use-fuzzy-match t)
+  )
+#+END_SRC
+
+The [[https://github.com/ggreer/the_silver_searcher][silver searcher]] package uses a faster search engine to find words in a buffer. This package has an external dependency that needs to be installed. In Mac, run =brew install the_silver_searcher= to install the required tool.
+#+BEGIN_SRC emacs-lisp
+(use-package helm-ag
+  :ensure t)
+#+END_SRC
+
+* Git
+The package =Magit= provides a Git porcelain inside Emacs. The shortcut =C-x g= is global and shows Magit's interface.
+#+BEGIN_SRC emacs-lisp
+(use-package magit
+  :ensure t
+  :config
+  (global-set-key (kbd "C-x g") 'magit-status)
+  )
+#+END_SRC
+
+* Encryption
+The external program =gnupg2= can be used to encrypt and decrypt =.gpg= files.
+First, install =gnupg2= on your system: =brew install gnupg2=.
+After loading the package, =gpg= files can be opened and saved in Emacs, and you will be prompted for passwords.
+#+BEGIN_SRC emacs-lisp
+(setq epa-pinentry-mode 'loopback
+      epg-gpg-program "gpg")
+#+END_SRC
+
+* Org-mode
+The package =org-mode= is one of the core productivity tools in Emacs. It allows for organizing text in trees, exporting files to several different languages, literatre programming, and much more.
+#+BEGIN_SRC emacs-lisp
+(use-package org
+  :ensure org-plus-contrib
+  :config
+  ;; === Agenda ===
+  (define-key global-map "\C-ca" 'org-agenda)
+  (setq org-agenda-files '("~/Emacs/"))
+  ;; Keep subtasks out of the global TODO list
+  (setq org-agenda-todo-list-sublevels nil)
+  ;; always displays the current day and time on agenda
+  (setq org-agenda-time-grid (quote ((daily today)
+                                     (800 1000 1200 1400 1600 1800 2000)
+                                     "......" "----------------")))
+  ;; === ===
+  ;; to use tabs inside orgmode code blocks
+  (setq org-src-tab-acts-natively t)
+  ;; indent trees and subtrees
+  (add-hook 'org-mode-hook #'org-indent-mode)
+  ;; Ignores headlines with tag "ignore", but does not ignore its contents
+  ;; tree is exported as if its headline had been erased
+  (require 'ox-extra)
+  (ox-extras-activate '(ignore-headlines))
+  )
+#+END_SRC
+
+Enable exporting to Markdown files:
+#+BEGIN_SRC emacs-lisp
+(use-package ox-md)
+#+END_SRC
+
+Export using KOMA script (for Latex letters):
+#+BEGIN_SRC emacs-lisp
+(eval-after-load 'ox '(require 'ox-koma-letter))
+#+END_SRC
+
+** Babel - Literate Programming
+When exporting =.org= files that have code blocks, the dafault behavior is to evaluate the code before exporting.
+I turn this behavior off globally. To turn it off block by block, use the header =:eval never-export=.
+#+BEGIN_SRC emacs-lisp
+(setq org-export-use-babel nil)
+#+END_SRC
+
+To execute a code block, we use =C-c C-c=. Babel will ask if you are sure about evaluating the code.
+To turn disable this message:
+#+BEGIN_SRC emacs-lisp
+(setq org-confirm-babel-evaluate nil)
+#+END_SRC
+
+After a babel code block is executed with =C-c C-c=, the hook =org-babel-after-execute-hook= is called.
+We use this hook to call the function =org-redisplay-inline-images=, which displays images from links. This is useful with code blocks that generate images (which are usually stored as links). After executing the code block, the image will be displayed due to this hook.
+#+BEGIN_SRC emacs-lisp
+(add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
+#+END_SRC
+
+To edit a source code block in another buffer (with major mode related to the language) use =C-c '=.
+
+To enable the execution of different programming languages:
+#+BEGIN_SRC emacs-lisp
+(org-babel-do-load-languages 'org-babel-load-languages
+                             '((python . t)
+                               (js . t)
+                               (jupyter . t)
+                               (C . t)
+                               (matlab . t)
+                               (plantuml . t)))
+(require 'ob-python)
+(require 'ob-js)
+#+END_SRC
+
+When switching between the org buffer and the language mode edit buffer, preserve the whitespaces (otherwise org might add some whitespaces to indent the code):
+#+BEGIN_SRC emacs-lisp
+(setq org-src-preserve-indentation t)
+#+END_SRC
+
+A Python code block is usually accompanied with a [[https://stackoverflow.com/questions/18778894/emacs-24-3-python-cant-guess-python-indent-offset-using-defaults-4][message about guessing indentation]]. Turn off this message:
+#+BEGIN_SRC emacs-lisp
+(setq python-indent-guess-indent-offset t
+      python-indent-guess-indent-offset-verbose nil)
+#+END_SRC
+
+There is a language for generating figures (connected boxes) that is called PlantUML. We can generate those figure within Emacs, provided we download the Java file and store it somewhere on the computer:
+#+BEGIN_SRC emacs-lisp
+(setq org-plantuml-jar-path "~/Emacs/Settings/Plantuml/plantuml.jar")
+#+END_SRC
+
+To export a single source code block to a file, we need to add the option =:tangle filename.ending=. Then, running the function =ob-tangle= with =C-u C-c C-v C-t= will export that single code block to the file. If more than one code block have the option =:tangle= with the same file name, then all code blocks will be exported to that file.
+
+** Latex Export and Preview
+Use numbered sections:
+#+BEGIN_SRC emacs-lisp
+(setq org-export-with-section-numbers t)
+#+END_SRC
+
+Preview Latex equations with SVG images instead of PNG (necessary for high dpi screens):
+#+BEGIN_SRC emacs-lisp
+(setq org-latex-create-formula-image-program 'dvisvgm)
+#+END_SRC
+
+Use captions above images and tables (as is done is most journals):
+#+BEGIN_SRC emacs-lisp
+(setq org-latex-listings 'listings
+      org-latex-caption-above '(table image))
+#+END_SRC
+
+** HTML Export
+Configurations for exporting org files to html.
+These are universal configurations that are applied to all files, so these be kept to a minimum. Additional configurations can be included in individual subtrees.
+
+Removes the entire postamble, including author, date and validation link:
+#+BEGIN_SRC emacs-lisp
+(setq org-html-postamble nil)
+#+END_SRC
+
+The package [[https://github.com/hniksic/emacs-htmlize][=htmlize=]] helps correctly exporting from org to html:
+#+BEGIN_SRC emacs-lisp
+(use-package htmlize
+  :ensure t)
+#+END_SRC
+
+* Programming
+** Latex
+When compiling a Latex file, Emacs will need to find the compiler on the computer. It is often easier to directly add the path to Latex on the PATH environmental variable.
+#+BEGIN_SRC emacs-lisp
+(setenv "PATH" (concat ":/Library/TeX/texbin/" (getenv "PATH")))
+(add-to-list 'exec-path "/Library/TeX/texbin")
+#+END_SRC
+
+When compiling a Latex file, we often need to run compile, then bibtex, and then compile again. This repetitive task is done automatically by the package [[https://github.com/Malabarba/latex-extra][=latex-extra=]]:
+#+BEGIN_SRC emacs-lisp
+(use-package latex-extra
+  :ensure t
+  :hook (LaTeX-mode . latex-extra-mode))
+#+END_SRC
+
+# (setq TeX-auto-save t
+#       TeX-parse-self t
+#       TeX-save-query nil)
+** Web Development
+The package [[http://web-mode.org https://github.com/fxbois/web-mode][web-mode]] is an autonomous emacs major-mode for editing web templates.
+#+BEGIN_SRC emacs-lisp
+(use-package web-mode
+  :ensure web-mode
+  :config
+  (add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.[agj]sp\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+  )
+#+END_SRC
+
+When doing web development we often want a live preview of the changes in the code base.
+The package =impatitent-mode= offers a live preview via a local server:
+#+BEGIN_SRC emacs-lisp
+(use-package impatient-mode
+  :ensure impatient-mode
+  :config
+  (require 'impatient-mode))
+#+END_SRC
+To enable the web server, run =M-x httpd-start=.
+Then a buffer can be live previewed by enabling the minor mode =impatient-mode= for that buffer (run =M-x impatient-mode=).
+Now, go to http://localhost:8080/imp/ to see the published buffers.
+** Matlab
+The package =matlab= allows for writing Matlab code in Emacs and executing it in a Matlab shell.
+#+BEGIN_SRC emacs-lisp
+(use-package matlab
+  :ensure matlab-mode
+  :config
+  (setq matlab-shell-command "/Volumes/SD/Applications/MATLAB_R2019b.app/bin/matlab")
+  (add-to-list 'load-path "/Volumes/SD/Applications/MATLAB_R2019b.app/bin/") ;add matlab to path
+  (setq matlab-shell-command-switches (quote ("-nodesktop -nodisplay -nosplash")))
+  (setq auto-mode-alist (cons '("\\.m$" . matlab-mode) auto-mode-alist))
+  )
+#+END_SRC
+The path to Matlab's binaries needs to be updated whenever the install folder changes.
+
+** Python
+# Use the minor mode =hs-minor-mode= for folding Python code:
+# #+BEGIN_SRC emacs-lisp
+# (add-hook 'python-mode-hook 'hs-minor-mode)
+# (define-key python-mode-map (kbd "C-h C-b") 'hs-hide-block)
+# (define-key python-mode-map (kbd "C-h C-s") 'hs-show-block)
+# (define-key python-mode-map (kbd "<C-tab>") 'hs-toggle-hiding)
+# (define-key python-mode-map (kbd "<C-tab>") 'hs-toggle-hiding)
+# #+END_SRC
+
+The Python program =black= can format Python code in a neat way. The package =python-black= available for Emacs allows us to call =black= from within a buffer in Emacs.
+First, install =black= by running =pip install black=.
+Then:
+#+BEGIN_SRC emacs-lisp
+(use-package python-black
+  :ensure t
+  :demand t
+  :after python
+  :bind
+  (:map python-mode-map
+        ("C-c C-a" . python-black-buffer))
+  )
+#+END_SRC
+The key =C-c C-a= executes =black= on a buffer.
+
+We use the ipython kernel to run Python code within Emacs.
+The communication is done via a package called =emacs-jupyter=.
+#+BEGIN_SRC emacs-lisp
+;; ;; http://kitchingroup.cheme.cmu.edu/media/ox-ipynb.el
+;; ;; cd ~/.emacs.d
+;; ;; mkdir lisp
+;; ;; wget http://kitchingroup.cheme.cmu.edu/media/ox-ipynb.el
+(add-to-list 'load-path "~/.emacs.d/lisp")
+(require 'ox-ipynb)
+(require 'jupyter)
+#+END_SRC
+
+
+# ;; ;; elpy
+# ;; ;; Elpy is an Emacs package to bring powerful Python editing to Emacs. It combines and configures a number of other packages, both written in Emacs Lisp as well as Python.
+# ;; ;; https://github.com/jorgenschaefer/elpy
+# ;; (use-package elpy
+# ;;   :ensure t
+# ;;   :config
+# ;;   (elpy-enable)
+# ;;   ;; (define-key global-map (kbd "C-c C-a") 'elpy-autopep8-fix-code)
+# ;;   (setq elpy-rpc-python-command "python"
+# ;;         python-shell-interpreter "python"
+# ;;         python-shell-interpreter-args "-i"
+# ;;         inhibit-startup-message t)
+# ;;   )
+# ;; (use-package elpy
+# ;;   :ensure elpy
+# ;;   :config
+# ;;   (elpy-enable)
+# ;;   (setq elpy-rpc-python-command "python"
+# ;;	python-shell-interpreter "python"
+# ;;	python-shell-interpreter-args "-i"
+# ;;	inhibit-startup-message t)
+# ;;   (define-key global-map (kbd "C-c C-a") 'elpy-autopep8-fix-code) ; auto pep8 formatting for python files
+# ;;   )
+# ;; ;; to use the full capabilities of this package, it is necessary to install other python packages
+# ;; ;; run this on terminal: pip install jedi flake8 autopep8
+
+
+# ;; Applies isort to the current buffer
+# ;; Used for organizing imports in Python files
+# (defun isort-buffer ()
+#   "Uses the Python program isort on current buffer."
+#   (interactive)
+#   (setq tmp-file (make-temp-file "isort-test"))
+#   (mark-whole-buffer)
+#   (write-region (point-min) (point-max) tmp-file)
+#   (shell-command (concat "isort " tmp-file))
+#   (erase-buffer)
+#   (insert-file-contents tmp-file))
+
+** R
+#+BEGIN_SRC emacs-lisp
+(use-package ess
+  :ensure t
+  :init (require 'ess-site))
+#+END_SRC
+
+
+* Custom Functions
+Make Emacs transparent so you can see programs behind it. Use =C-c t= to toggle between transparency levels.
+#+BEGIN_SRC emacs-lisp
+(setq transparency_level 0)
+(defun my:change_transparency ()
+  "Toggles transparency of Emacs between 3 settings (none, mild, moderate)."
+  (interactive)
+  (if (equal transparency_level 0)
+      (progn (set-frame-parameter (selected-frame) 'alpha '(95 . 85))
+             (setq transparency_level 1))
+    (if (equal transparency_level 1)
+        (progn (set-frame-parameter (selected-frame) 'alpha '(80 . 85))
+               (setq transparency_level 2))
+      (if (equal transparency_level 2)
+          (progn (set-frame-parameter (selected-frame) 'alpha '(60 . 85))
+                 (setq transparency_level 3))
+        (if (equal transparency_level 3)
+            (progn (set-frame-parameter (selected-frame) 'alpha '(100 . 85))
+                   (setq transparency_level 0))
+      )))))
+(define-key global-map (kbd "C-c t") 'my:change_transparency)
+#+END_SRC
+
+Set shortcuts for shrinking or enlarging window horizontally:
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "<left>") 'shrink-window-horizontally)
+(global-set-key (kbd "<right>") 'enlarge-window-horizontally)
+#+END_SRC
+
+Set shortcuts for shrinking or enlarging window vertically:
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "<up>") 'shrink-window)
+(global-set-key (kbd "<down>") 'enlarge-window)
+#+END_SRC
+
+# ;; clear content of codeblocks
+# (defun org-clear-src-blocks ()
+# "Clear src code blocks."
+# (interactive)
+#   (save-excursion
+#     (goto-char (point-max))
+#     (while (re-search-backward "#\\+END_SRC" nil t)
+#       (let ((reg-end (point))
+#             reg-beg)
+#         (re-search-backward "#\\+BEGIN_SRC" nil t)
+#         (setq reg-beg (1+ (line-end-position)))
+#         (delete-region reg-beg reg-end)))))
+
+# ;; clear results of codeblocks
+# (defun scimax-ob-clear-all-results ()
+#   "Clear all results in the buffer."
+#   (interactive)
+#   (save-excursion
+#     (goto-char (point-min))
+#     (while (org-babel-next-src-block)
+#       (org-babel-remove-result))))
+* Brain
+#+BEGIN_SRC emacs-lisp
+;; (use-package org-brain
+;;   :ensure t
+;;   :init
+;;   (setq org-brain-path "~/Emacs/Brain")
+;;   :config
+;;   (setq org-id-track-globally t)
+;;   (setq org-id-locations-file "~/.emacs.d/.org-id-locations")
+;;   (add-hook 'before-save-hook #'org-brain-ensure-ids-in-buffer)
+;;   (push '("b" "Brain" plain (function org-brain-goto-end)
+;;           "* %i%?" :empty-lines 1)
+;;         org-capture-templates)
+;;   (setq org-brain-visualize-default-choices 'all)
+;;   (setq org-brain-title-max-length 12)
+;;   (setq org-brain-include-file-entries nil
+;;         org-brain-file-entries-use-title nil))
+
+#+END_SRC
