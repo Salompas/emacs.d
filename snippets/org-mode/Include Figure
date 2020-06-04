@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: Include Figure
+# key: <f
+# --
+#+CAPTION: $1
+#+ATTR_LATEX: :placement [H] :width 8cm
+#+NAME: fig:$2
+[[$3]]

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: emacs-jupyter code block for python (output)
+# key: <spo
+# --
+#+BEGIN_SRC jupyter-python :session py :results output :async yes
+$0
+#+END_SRC

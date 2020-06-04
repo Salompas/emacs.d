@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Create stylized P
+# key: \P
+# --
+$\mathbb{P}$

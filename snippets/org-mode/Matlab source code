@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: Matlab source code
+# key: <sm
+# --
+#+ATTR_LATEX: :options style=Matlab-editor
+#+BEGIN_SRC matlab -n
+$0
+#+END_SRC

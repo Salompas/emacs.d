@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Python code block
+# key: <spp
+# --
+#+BEGIN_SRC python :results silent :session Python
+$1
+#+END_SRC

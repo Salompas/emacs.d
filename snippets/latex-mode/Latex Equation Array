@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Latex Equation Array
+# key: \eqa
+# --
+\begin{eqnarray}
+$0
+\end{eqnarray}

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Code Block for Python without results and same session
+# key: <sp
+# --
+#+BEGIN_SRC jupyter-python :session py :results silent :async yes
+$0
+#+END_SRC

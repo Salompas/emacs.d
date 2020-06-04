@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: Latex cases environemnt (defined in amsmath).
+# key: \cases
+# --
+\begin{cases}
+$1 ,& \text{if } $2\\
+$3 ,& \text{if } $4
+\end{cases}

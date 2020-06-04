@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Matlab source code
+# key: <sm
+# --
+#+BEGIN_SRC matlab
+$0
+#+END_SRC

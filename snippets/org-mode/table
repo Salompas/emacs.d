@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# key: \table
+# name: table
+# --
+\begin{table}[H]
+  \centering
+  \begin{tabular}{$1}
+    $2
+  \end{tabular}
+  \caption{$3}
+  \label{tbl:$4}
+\end{table}

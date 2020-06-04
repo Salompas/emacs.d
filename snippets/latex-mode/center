@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: center
+# key: center
+# --
+\begin{center}
+	$1
+\end{center}

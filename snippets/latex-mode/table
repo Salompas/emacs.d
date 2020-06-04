@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# name: table
+# key: table
+# --
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+a & b \\\\
+\hline
+c & d \\\\
+\hline
+\end{tabular}
+\end{center}

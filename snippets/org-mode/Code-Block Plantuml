@@ -1,0 +1,6 @@
+# key: <spl
+# name: Code-Block Plantuml
+# --
+#+BEGIN_SRC plantuml :file $1
+$2
+#+END_SRC

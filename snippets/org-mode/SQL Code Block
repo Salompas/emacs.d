@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: SQL Code Block
+# key: <sql
+# --
+#+BEGIN_SRC SQL
+$1
+#+END_SRC

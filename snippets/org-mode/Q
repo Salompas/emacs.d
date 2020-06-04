@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Creates a stylized Q
+# key: \Q
+# --
+$\mathbb{Q}$

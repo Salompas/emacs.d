@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: Source Code Block for Latex
+# key: <sl
+# --
+#+ATTR_LATEX: :options numbers=left, frame=single
+#+BEGIN_SRC latex
+$0
+#+END_SRC

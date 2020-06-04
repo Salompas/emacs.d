@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Org tree unnumbered
+# key: \nonumber
+# --
+:PROPERTIES:
+:UNNUMBERED: t
+:END:

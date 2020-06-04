@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: org-special-block for Latex Problem environment
+# key: <p
+# --
+#+BEGIN_problem
+$0
+#+END_problem

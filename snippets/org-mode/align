@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Creates an align* LaTeX environment
+# key: \align
+# --
+\begin{align*}
+$0
+\end{align*}

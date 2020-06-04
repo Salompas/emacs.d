@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Indicator function
+# key: \1
+# --
+\mathrm{1}_{\left\\{$0\right\\}}

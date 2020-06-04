@@ -1,0 +1,7 @@
+# key: <sb
+# name: Bash code block
+# --
+#+ATTR_LATEX: :options style=bash
+#+BEGIN_SRC bash -n
+$0
+#+END_SRC
