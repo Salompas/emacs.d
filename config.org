@@ -411,7 +411,7 @@ The package [[https://github.com/hniksic/emacs-htmlize][=htmlize=]] helps correc
 ** Latex
 When compiling a Latex file, Emacs will need to find the compiler on the computer. It is often easier to directly add the path to Latex on the PATH environmental variable.
 #+BEGIN_SRC emacs-lisp
-(setenv "PATH" (concat ":/Library/TeX/texbin/" (getenv "PATH")))
+(setenv "PATH" (concat ":/Library/TeX/texbin/:" (getenv "PATH")))
 (add-to-list 'exec-path "/Library/TeX/texbin")
 #+END_SRC
 
@@ -500,7 +500,7 @@ The communication is done via a package called =emacs-jupyter=.
 ;; ;; mkdir lisp
 ;; ;; wget http://kitchingroup.cheme.cmu.edu/media/ox-ipynb.el
 (add-to-list 'load-path "~/.emacs.d/lisp")
-(require 'ox-ipynb)
+(require 'ox-ipynb)                     ;exporter: org to ipynb
 (require 'jupyter)
 #+END_SRC
 
@@ -534,15 +534,17 @@ The communication is done via a package called =emacs-jupyter=.
 
 # ;; Applies isort to the current buffer
 # ;; Used for organizing imports in Python files
-# (defun isort-buffer ()
-#   "Uses the Python program isort on current buffer."
-#   (interactive)
-#   (setq tmp-file (make-temp-file "isort-test"))
-#   (mark-whole-buffer)
-#   (write-region (point-min) (point-max) tmp-file)
-#   (shell-command (concat "isort " tmp-file))
-#   (erase-buffer)
-#   (insert-file-contents tmp-file))
+#+BEGIN_SRC emacs-lisp
+(defun isort-buffer ()
+  "Uses the Python program isort on current buffer."
+  (interactive)
+  (setq tmp-file (make-temp-file "isort-test"))
+  (mark-whole-buffer)
+  (write-region (point-min) (point-max) tmp-file)
+  (shell-command (concat "isort " tmp-file))
+  (erase-buffer)
+  (insert-file-contents tmp-file))
+#+END_SRC
 
 ** R
 #+BEGIN_SRC emacs-lisp
