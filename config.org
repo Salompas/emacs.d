@@ -352,7 +352,8 @@ To enable the execution of different programming languages:
                                (jupyter . t)
                                (C . t)
                                (matlab . t)
-                               (plantuml . t)))
+                               (plantuml . t)
+                               (R . t)))
 (require 'ob-python)
 (require 'ob-js)
 #+END_SRC
@@ -548,11 +549,24 @@ The communication is done via a package called =emacs-jupyter=.
 
 ** R
 #+BEGIN_SRC emacs-lisp
+(defun r-format ()
+  "Uses the Python program isort on current buffer."
+  (interactive)
+  (setq tmp-file (make-temp-file "r-format-file" nil ".r"))
+  (mark-whole-buffer)
+  (write-region (point-min) (point-max) tmp-file)
+  (shell-command (concat "R --slave -e \"styler::style_file('" tmp-file "')\" "))
+  (erase-buffer)
+  (insert-file-contents tmp-file))
+
 (use-package ess
   :ensure t
-  :init (require 'ess-site))
+  :init (require 'ess-site)
+  :bind
+  (:map ess-mode-map
+        ("C-c C-a" . r-format))
+)
 #+END_SRC
-
 
 * Custom Functions
 Make Emacs transparent so you can see programs behind it. Use =C-c t= to toggle between transparency levels.
