@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: jupyter R code block
+# key: <sjr
+# --
+#+BEGIN_SRC jupyter-R :session r :results output :async yes
+$0
+#+END_SRC
