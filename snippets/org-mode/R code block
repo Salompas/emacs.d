@@ -2,6 +2,6 @@
 # name: R code block
 # key: <sr
 # --
-#+BEGIN_SRC jupyter-R :session r :results output :async yes
+#+BEGIN_SRC R :session *R* :results output :async yes
 $0
 #+END_SRC

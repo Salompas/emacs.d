@@ -310,6 +310,7 @@ The package =org-mode= is one of the core productivity tools in Emacs. It allows
   ;; tree is exported as if its headline had been erased
   (require 'ox-extra)
   (ox-extras-activate '(ignore-headlines))
+  (setq org-src-window-setup 'split-window-below)
   )
 #+END_SRC
 
@@ -406,6 +407,20 @@ The package [[https://github.com/hniksic/emacs-htmlize][=htmlize=]] helps correc
 #+BEGIN_SRC emacs-lisp
 (use-package htmlize
   :ensure t)
+#+END_SRC
+
+** Keybindings for Code Blocks
+#+BEGIN_SRC emacs-lisp
+
+#+END_SRC
+
+** Drag-drop images
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'load-path "~/.emacs.d/lisp")
+(require 'org-download)
+(setq-default org-download-image-dir "~/Emacs/images")
+(setq org-download-heading-lvl nil)
+
 #+END_SRC
 
 * Programming
@@ -557,15 +572,69 @@ The communication is done via a package called =emacs-jupyter=.
   (write-region (point-min) (point-max) tmp-file)
   (shell-command (concat "R --slave -e \"styler::style_file('" tmp-file "')\" "))
   (erase-buffer)
-  (insert-file-contents tmp-file))
+  (insert-file-contents tmp-file)
+  )
+
+(defun ess-insert-pipe ()
+  "Inserts the pipe symbol in ESS major mode"
+  (interactive)
+  (insert " %>% ")
+  )
+
+(defun ess-insert-in ()
+  "Inserts the pipe symbol in ESS major mode"
+  (interactive)
+  (insert " %in% ")
+  )
+
+(defun ess-insert-colen-colen ()
+  "Inserts the pipe symbol in ESS major mode"
+  (interactive)
+  (insert "::")
+  )
 
 (use-package ess
   :ensure t
   :init (require 'ess-site)
   :bind
-  (:map ess-mode-map
-        ("C-c C-a" . r-format))
+  (:map ess-mode-map ("C-c C-a" . r-format))
+  (:map ess-mode-map ("C-=" . ess-insert-assign))
+  (:map inferior-ess-mode-map ("C-=" . ess-insert-assign)) ;for inferior shell
+  (:map ess-mode-map ("C-." . ess-insert-pipe))
+  (:map inferior-ess-mode-map ("C-." . ess-insert-pipe))
+  (:map ess-mode-map ("C-," . ess-insert-in))
+  (:map inferior-ess-mode-map ("C-," . ess-insert-in))
+  (:map ess-mode-map ("C-;" . ess-insert-colen-colen))
+  (:map inferior-ess-mode-map ("C-;" . ess-insert-colen-colen))
 )
+
+(use-package polymode
+  :ensure t)
+
+(use-package poly-R
+  :ensure t)
+
+(defun r-markdown-insert-chunk ()
+  "Inserts code block for r in a markdown mode buffer."
+  (interactive)
+  (insert "```{r}\n\n```")
+  (forward-line -1)
+  )
+
+(defun r-markdown-eval-chunk ()
+  (interactive)
+  (polymode-eval-chunk (point))
+  (switch-to-buffer "*R*")
+  (other-window 1)
+  )
+
+;; (use-package poly-markdown
+;;   :ensure t
+;;   :bind
+;;   (:map poly-markdown-mode-map ("C-c C-r" . r-markdown-insert-chunk))
+;;   (:map poly-markdown-mode-map ("C-c C-e" . r-markdown-eval-chunk))
+;;   )
+
 #+END_SRC
 
 * Custom Functions
@@ -601,6 +670,21 @@ Set shortcuts for shrinking or enlarging window vertically:
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "<up>") 'shrink-window)
 (global-set-key (kbd "<down>") 'enlarge-window)
+#+END_SRC
+
+Copy file path of the current buffer to clipboard:
+#+BEGIN_SRC emacs-lisp
+(defun my-put-file-name-on-clipboard ()
+  "Copy the file name of the current buffer to the clipboard."
+  (interactive)
+  (let ((filename (if (equal major-mode 'dired-mode)
+                      default-directory
+                    (buffer-file-name))))
+    (when filename
+      (with-temp-buffer
+        (insert filename)
+        (clipboard-kill-region (point-min) (point-max)))
+      (message filename))))
 #+END_SRC
 
 # ;; clear content of codeblocks
